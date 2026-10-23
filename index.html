@@ -122,6 +122,11 @@
             <option value="忠诚">忠诚</option>
           </select>
         </div>
+        <div class="field" id="access-code-field" hidden>
+          <label for="access-code">访问口令</label>
+          <input id="access-code" name="access_code" type="password" autocomplete="current-password" aria-describedby="access-code-hint">
+          <p class="hint" id="access-code-hint">请输入口令，然后再次点击“生成标题”</p>
+        </div>
         <button class="submit" id="submit-button" type="submit">生成标题</button>
         <p class="status" id="status" role="status" aria-live="polite"></p>
       </form>
@@ -144,6 +149,8 @@
     const product = document.querySelector('#product-name');
     const selling = document.querySelector('#selling-point');
     const stage = document.querySelector('#stage');
+    const accessCodeField = document.querySelector('#access-code-field');
+    const accessCode = document.querySelector('#access-code');
     const button = document.querySelector('#submit-button');
     const status = document.querySelector('#status');
     const safeResult = document.querySelector('#safe-result');
@@ -177,10 +184,18 @@
           body: JSON.stringify({
             product_name: product.value,
             selling_point: selling.value,
-            stage: stage.value
+            stage: stage.value,
+            access_code: accessCode.value
           })
         });
         const result = await response.json();
+        if (!response.ok && result.message === '口令不对') {
+          accessCodeField.hidden = false;
+          accessCode.required = true;
+          accessCode.focus();
+          status.textContent = '口令不对';
+          return;
+        }
         if (!response.ok) throw new Error(result.message || '生成失败，请稍后再试。');
 
         status.textContent = '';

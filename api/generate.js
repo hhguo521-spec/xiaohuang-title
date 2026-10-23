@@ -36,6 +36,11 @@ module.exports = async function handler(req, res) {
     return send(res, 405, { message: '请使用 POST 请求。' });
   }
 
+  const accessCode = process.env.ACCESS_CODE;
+  if (accessCode && req.body?.access_code !== accessCode) {
+    return send(res, 401, { message: '口令不对' });
+  }
+
   const invalid = validateInput(req.body);
   if (invalid) return send(res, 400, { message: invalid });
 
