@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fffaf4">
+  <title>小红书标题生成器</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #292521;
+      --muted: #817970;
+      --accent: #ed6a45;
+      --paper: #fffdf9;
+      --line: #eadfd3;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 36px 18px;
+      color: var(--ink);
+      background: radial-gradient(circle at 12% 10%, #fff0df 0, transparent 30rem), #fffaf4;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+    .page { width: min(100%, 720px); margin: 0 auto; }
+    header { margin: 4px 0 24px; }
+    .eyebrow { color: var(--accent); font-size: 13px; font-weight: 750; letter-spacing: .08em; }
+    h1 { margin: 8px 0; font-size: clamp(28px, 6vw, 40px); letter-spacing: -.04em; }
+    .intro { margin: 0; color: var(--muted); line-height: 1.7; }
+    .card {
+      padding: clamp(20px, 5vw, 32px);
+      border: 1px solid rgba(234, 223, 211, .9);
+      border-radius: 24px;
+      background: rgba(255, 253, 249, .94);
+      box-shadow: 0 18px 54px rgba(93, 64, 37, .08);
+    }
+    .field { margin-bottom: 21px; }
+    label { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 8px; font-size: 14px; font-weight: 700; }
+    .counter { color: #a1978d; font-size: 12px; font-weight: 500; }
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      padding: 13px 14px;
+      color: var(--ink);
+      background: white;
+      font: inherit;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    textarea { min-height: 116px; resize: vertical; line-height: 1.6; }
+    input:focus, textarea:focus, select:focus { border-color: #e99173; box-shadow: 0 0 0 3px rgba(237, 106, 69, .12); }
+    input::placeholder, textarea::placeholder { color: #b8afa6; }
+    .hint { margin: 7px 0 0; color: #9b9188; font-size: 12px; }
+    button { font: inherit; cursor: pointer; }
+    .submit {
+      width: 100%;
+      min-height: 52px;
+      border: 0;
+      border-radius: 14px;
+      color: white;
+      background: var(--accent);
+      font-weight: 750;
+      box-shadow: 0 8px 18px rgba(237, 106, 69, .2);
+      transition: transform .15s, opacity .15s;
+    }
+    .submit:hover:not(:disabled) { transform: translateY(-1px); }
+    .submit:disabled { cursor: wait; opacity: .72; }
+    .status { min-height: 20px; margin: 14px 0 0; color: var(--muted); text-align: center; font-size: 13px; }
+    .result { margin-top: 20px; padding: 20px; border-radius: 16px; line-height: 1.65; }
+    .result[hidden] { display: none; }
+    .result h2 { margin: 0 0 10px; font-size: 16px; }
+    .result p { margin: 8px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .safe { border: 1px solid #bde3c7; background: #f0fbf2; }
+    .safe h2 { color: #277642; }
+    .review { border: 1px solid #f0d0a4; background: #fff8eb; }
+    .review h2 { color: #a86015; }
+    .title-text { font-size: 19px; font-weight: 750; }
+    .copy {
+      margin-top: 9px;
+      padding: 9px 14px;
+      border: 1px solid #9dcea8;
+      border-radius: 10px;
+      color: #286b3c;
+      background: white;
+      font-weight: 700;
+    }
+    @media (max-width: 480px) {
+      body { padding: 22px 13px; }
+      .card { border-radius: 19px; }
+      .result { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div class="eyebrow">TITLE STUDIO · 小红书灵感助手</div>
+      <h1>小红书标题生成器</h1>
+      <p class="intro">填写商品信息和营销阶段，生成更贴合内容目标的标题。</p>
+    </header>
+
+    <section class="card" aria-label="标题生成表单">
+      <form id="title-form">
+        <div class="field">
+          <label for="product-name"><span>商品名</span><span class="counter" id="product-count">0 / 30</span></label>
+          <input id="product-name" name="product_name" type="text" placeholder="例如：轻盈保湿面霜" required>
+          <p class="hint">用简短名称描述你要推广的商品</p>
+        </div>
+        <div class="field">
+          <label for="selling-point"><span>核心卖点</span><span class="counter" id="selling-count">0 / 100</span></label>
+          <textarea id="selling-point" name="selling_point" placeholder="例如：清爽不黏腻，添加神经酰胺，适合换季敏感肌" required></textarea>
+          <p class="hint">说清楚商品最值得被记住的特点</p>
+        </div>
+        <div class="field">
+          <label for="stage">营销段</label>
+          <select id="stage" name="stage">
+            <option value="认知">认知</option>
+            <option value="兴趣">兴趣</option>
+            <option value="购买">购买</option>
+            <option value="忠诚">忠诚</option>
+          </select>
+        </div>
+        <button class="submit" id="submit-button" type="submit">生成标题</button>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+      </form>
+
+      <section class="result safe" id="safe-result" aria-live="polite" hidden>
+        <h2>标题已生成</h2>
+        <p class="title-text" id="safe-title"></p>
+        <button class="copy" id="copy-button" type="button">复制标题</button>
+      </section>
+      <section class="result review" id="review-result" aria-live="polite" hidden>
+        <h2>需要人工复核</h2>
+        <p><strong>判断结果：</strong><span id="verdict"></span></p>
+        <p><strong>草稿标题：</strong><span id="draft"></span></p>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const form = document.querySelector('#title-form');
+    const product = document.querySelector('#product-name');
+    const selling = document.querySelector('#selling-point');
+    const stage = document.querySelector('#stage');
+    const button = document.querySelector('#submit-button');
+    const status = document.querySelector('#status');
+    const safeResult = document.querySelector('#safe-result');
+    const reviewResult = document.querySelector('#review-result');
+    const charCount = (value) => Array.from(value).length;
+
+    function limitAndCount(input, limit, counter) {
+      const chars = Array.from(input.value);
+      if (chars.length > limit) input.value = chars.slice(0, limit).join('');
+      counter.textContent = `${charCount(input.value)} / ${limit}`;
+    }
+
+    product.addEventListener('input', () => {
+      limitAndCount(product, 30, document.querySelector('#product-count'));
+    });
+    selling.addEventListener('input', () => {
+      limitAndCount(selling, 100, document.querySelector('#selling-count'));
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      safeResult.hidden = true;
+      reviewResult.hidden = true;
+      status.textContent = '生成中…';
+      button.disabled = true;
+      button.textContent = '生成中…';
+      try {
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            product_name: product.value,
+            selling_point: selling.value,
+            stage: stage.value
+          })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || '生成失败，请稍后再试。');
+
+        status.textContent = '';
+        if (result.status === 'safe') {
+          document.querySelector('#safe-title').textContent = result.title;
+          safeResult.hidden = false;
+        } else if (result.status === 'review') {
+          document.querySelector('#verdict').textContent = result.verdict;
+          document.querySelector('#draft').textContent = result.draft;
+          reviewResult.hidden = false;
+        } else {
+          status.textContent = '返回结果无法识别，请再试一次。';
+        }
+      } catch (error) {
+        status.textContent = error.message || '生成失败，请稍后再试。';
+      } finally {
+        button.disabled = false;
+        button.textContent = '生成标题';
+      }
+    });
+
+    document.querySelector('#copy-button').addEventListener('click', async () => {
+      const title = document.querySelector('#safe-title').textContent;
+      try {
+        await navigator.clipboard.writeText(title);
+        status.textContent = '标题已复制';
+      } catch {
+        status.textContent = '复制失败，请手动选择标题复制。';
+      }
+    });
+  </script>
+</body>
+</html>
